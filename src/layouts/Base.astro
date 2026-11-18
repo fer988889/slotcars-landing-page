@@ -1,0 +1,23 @@
+﻿---
+interface Props { title: string; description: string }
+const { title, description } = Astro.props;
+---
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+<style is:global>
+  :root { --bg:#0b0d14; --fg:#f4f5f8; --accent:#ff3d2e; --accent2:#ffc83d; }
+  * { box-sizing: border-box; margin: 0; }
+  html.lenis, html.lenis body { height: auto; }
+  body { background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; overflow-x: hidden; }
+  a { color: inherit; }
+</style>

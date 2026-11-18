@@ -1,0 +1,77 @@
+﻿---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Slotcars | Pistas de autos a control remoto para tu evento" description="Llevamos la pista, los obstáculos y los autos a control remoto a tu evento.">
+  <header class="nav">
+    <strong>SLOTCARS</strong>
+    <a class="btn" href="#contacto">Contacto</a>
+  </header>
+
+  <!-- HERO: capas con distinta velocidad -->
+  <section class="hero">
+    <div class="layer sky" data-speed="0.2"></div>
+    <div class="layer hills" data-speed="0.4"></div>
+    <div class="hero-text" data-speed="0.7">
+      <h1>La pista llega<br />a tu evento</h1>
+      <p>Autos a control remoto, obstáculos y toda la emoción. Nosotros ponemos todo.</p>
+      <a class="btn big" href="#contacto">Quiero cotizar</a>
+    </div>
+    <div class="layer road" data-speed="1.1"></div>
+  </section>
+
+  <section class="section">
+    <h2 data-reveal>¿Cómo funciona?</h2>
+    <div class="cards">
+      <article data-reveal><span>1</span><h3>Nos contás tu evento</h3><p>Fecha, lugar y cantidad de gente.</p></article>
+      <article data-reveal><span>2</span><h3>Llevamos la pista</h3><p>Armamos pista y obstáculos.</p></article>
+      <article data-reveal><span>3</span><h3>Todos corren</h3><p>Autos listos para jugar.</p></article>
+    </div>
+  </section>
+
+  <!-- Sección con fondo parallax -->
+  <section class="band">
+    <div class="band-bg" data-bg-parallax></div>
+    <h2 data-reveal>Velocidad, curvas y obstáculos</h2>
+  </section>
+
+  <section class="section" id="contacto">
+    <h2 data-reveal>Hablemos</h2>
+    <p data-reveal>Contanos de tu evento y te respondemos hoy.</p>
+    <a class="btn big" href="mailto:contacto@ejemplo.com">Escribinos</a>
+  </section>
+
+  <footer>© Slotcars</footer>
+
+  <script>
+    import '../scripts/parallax.ts';
+  </script>
+</Base>
+
+<style>
+  .nav { position: fixed; inset: 0 0 auto 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; padding: 1rem 5vw; backdrop-filter: blur(8px); background: rgba(11,13,20,.5); }
+  .btn { background: var(--accent); color: #fff; padding: .6rem 1.2rem; border-radius: 999px; text-decoration: none; font-weight: 700; display: inline-block; }
+  .btn.big { padding: .9rem 2rem; font-size: 1.1rem; }
+
+  .hero { position: relative; height: 100svh; overflow: hidden; display: grid; place-items: center; }
+  .layer { position: absolute; inset: -20% 0 -20% 0; will-change: transform; }
+  .sky { background: linear-gradient(#1a1f4d, #ff6a3d 85%, #ffc83d); }
+  .hills { background: radial-gradient(ellipse 60% 30% at 30% 85%, #2a1b3d 99%, transparent 100%), radial-gradient(ellipse 70% 35% at 80% 90%, #1d1230 99%, transparent 100%); }
+  .road { background: repeating-linear-gradient(90deg, transparent 0 60px, #fff 60px 100px, transparent 100px 160px) bottom/100% 6px no-repeat, linear-gradient(transparent 80%, #14161f 80%); }
+  .hero-text { position: relative; text-align: center; padding: 0 5vw; z-index: 2; }
+  h1 { font-size: clamp(2.5rem, 8vw, 6rem); line-height: 1; margin-bottom: 1rem; }
+  .hero-text p { max-width: 38ch; margin: 0 auto 1.5rem; font-size: 1.15rem; }
+
+  .section { padding: 20vh 5vw; text-align: center; }
+  h2 { font-size: clamp(2rem, 5vw, 3.5rem); margin-bottom: 2rem; }
+  .cards { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); max-width: 1000px; margin: 0 auto; }
+  article { background: #151926; padding: 2rem; border-radius: 1rem; }
+  article span { color: var(--accent2); font-size: 2.5rem; font-weight: 800; }
+
+  .band { position: relative; height: 80vh; overflow: hidden; display: grid; place-items: center; text-align: center; padding: 0 5vw; }
+  .band-bg { position: absolute; inset: -25% 0; background: linear-gradient(135deg, #ff3d2e, #6a1fff); will-change: transform; }
+  .band h2 { position: relative; margin: 0; }
+
+  footer { padding: 2rem; text-align: center; opacity: .6; }
+
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
