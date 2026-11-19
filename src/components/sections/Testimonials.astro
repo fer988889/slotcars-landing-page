@@ -1,0 +1,26 @@
+---
+import StoryPanel from '../StoryPanel.astro';
+import type { StoryPanelProps } from '../../types/video-story';
+
+type Props = StoryPanelProps;
+
+const testimonials = [
+  { quote: 'Los chicos no querían irse. Fue lo mejor del cumple.', author: 'Laura, cumpleaños infantil' },
+  { quote: 'Armaron todo en una hora y se encargaron de cada detalle.', author: 'Martín, evento corporativo' },
+  { quote: 'Grandes y chicos compitiendo toda la tarde. Volvemos a contratar.', author: 'Sofía, fiesta familiar' },
+];
+---
+<StoryPanel {...Astro.props}>
+  <h2>Lo que dicen</h2>
+  <div class="quotes">
+    {testimonials.map(({ quote, author }) => (
+      <blockquote>“{quote}”<cite>{author}</cite></blockquote>
+    ))}
+  </div>
+</StoryPanel>
+
+<style>
+  .quotes { display: grid; grid-template-columns: repeat(3, minmax(0, 18rem)); gap: 1.5rem; }
+  blockquote { margin: 0; padding: 1.5rem; border-radius: 1rem; background: rgb(11 13 20 / .55); font-size: 1.05rem; display: grid; gap: 1rem; }
+  cite { color: var(--accent2); font-style: normal; font-weight: 700; font-size: .95rem; }
+</style>

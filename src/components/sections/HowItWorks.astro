@@ -1,0 +1,20 @@
+---
+import StoryPanel from '../StoryPanel.astro';
+import type { StoryPanelProps } from '../../types/video-story';
+
+type Props = StoryPanelProps;
+---
+<StoryPanel {...Astro.props}>
+  <h2>¿Cómo funciona?</h2>
+  <ol class="steps">
+    <li><span>1</span><strong>Nos contás tu evento</strong>Fecha, lugar y cantidad de gente.</li>
+    <li><span>2</span><strong>Llevamos la pista</strong>La armamos con obstáculos y todo listo.</li>
+    <li><span>3</span><strong>Todos corren</strong>Autos y controles para chicos y grandes.</li>
+  </ol>
+</StoryPanel>
+
+<style>
+  .steps { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 16rem)); gap: 1.5rem; }
+  .steps li { display: grid; gap: .4rem; padding: 1.5rem; border-radius: 1rem; background: rgb(11 13 20 / .55); }
+  .steps span { color: var(--accent2); font-size: 2.2rem; font-weight: 800; }
+</style>

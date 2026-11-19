@@ -1,0 +1,11 @@
+---
+import StoryPanel from '../StoryPanel.astro';
+import type { StoryPanelProps } from '../../types/video-story';
+
+type Props = StoryPanelProps;
+---
+<StoryPanel {...Astro.props}>
+  <h1>La pista llega<br />a tu evento</h1>
+  <p>Autos a control remoto, obstáculos y toda la emoción. Nosotros ponemos todo.</p>
+  <a class="btn big" href="#contacto">Quiero cotizar</a>
+</StoryPanel>
