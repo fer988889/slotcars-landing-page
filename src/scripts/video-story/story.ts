@@ -1,10 +1,10 @@
 import gsap from 'gsap';
 import type Lenis from 'lenis';
-import type { Direction, Step, StoryOptions } from '../../types/video-story';
+import type { Direction, Focus, Scene, Step, StoryOptions } from '../../types/video-story';
 import { STORY_CONFIG as CONFIG } from './config';
 import { hidePanel, hideStill, showPanel, showStill, transitionScenes, zoomOut, zoomToFocus } from './effects';
 import { listenScrollGestures } from './gestures';
-import { createJump, createSnapshots, findJumpLayer } from './jump';
+import { createJumper, createSnapshots, findJumpLayer, type Jumper, type Snapshots } from './jump';
 import { buildSteps, findScenes, readFocus } from './scenes';
 import { endTime, loadVideo, seekTo, whenTimeReaches } from './video';
 
@@ -32,18 +32,37 @@ export async function initVideoStory({ scroll }: StoryOptions) {
     return;
   }
 
-  let navigateTo: ((target: HTMLElement) => void) | null = null;
-  listenAnchorLinks((target) => navigateTo?.(target));
+  let pendingTarget: HTMLElement | null = null;
+  let navigateTo = (target: HTMLElement) => {
+    pendingTarget = target;
+    if (!isStoryPanel(target)) scrollOutOfStory(scroll, target);
+  };
+  listenAnchorLinks((target) => navigateTo(target));
 
   scroll.stop();
-  await showStill(scenes[0], firstFocus, CONFIG.introDelay);
-  await showPanel(panels[0], 1);
+  playIntro(scenes[0], panels[0], firstFocus);
 
   const loaded = await allLoaded;
   const steps = buildSteps(scenes.filter((_, i) => loaded[i]), panels);
   const snapshots = createSnapshots(steps);
   snapshots.save(steps[0]);
-  navigateTo = startNavigation(story, scroll, steps, snapshots, createJump(steps, jumpLayer, snapshots));
+  const jumper = createJumper(steps, jumpLayer, snapshots);
+  navigateTo = startNavigation(story, scroll, steps, snapshots, jumper);
+  if (pendingTarget) navigateTo(pendingTarget);
+}
+
+async function playIntro(scene: Scene, panel: HTMLElement, focus: Focus | null) {
+  await showStill(scene, focus, CONFIG.introDelay);
+  await showPanel(panel, 1);
+}
+
+function isStoryPanel(target: HTMLElement) {
+  return target.matches('[data-panel]');
+}
+
+function scrollOutOfStory(scroll: Lenis, target: HTMLElement | number) {
+  scroll.start();
+  scroll.scrollTo(target, { duration: PAGE_SCROLL_DURATION });
 }
 
 function listenAnchorLinks(onLink: (target: HTMLElement) => void) {
@@ -56,15 +75,15 @@ function listenAnchorLinks(onLink: (target: HTMLElement) => void) {
   });
 }
 
-type Snapshots = ReturnType<typeof createSnapshots>;
-type Jump = ReturnType<typeof createJump>;
+type StepAnimation = (from: Step, to: Step, isCancelled: () => boolean) => Promise<void>;
 
-function startNavigation(story: HTMLElement, scroll: Lenis, steps: Step[], snapshots: Snapshots, jump: Jump) {
+function startNavigation(story: HTMLElement, scroll: Lenis, steps: Step[], snapshots: Snapshots, jumper: Jumper) {
   const lastStep = steps.length - 1;
   let currentStep = 0;
   let isAnimating = false;
-  let isReturning = false;
   let hasLeftStory = false;
+  let activeRun = 0;
+  let returning: Promise<void> | null = null;
 
   const gestures = listenScrollGestures(onGesture);
   scroll.on('scroll', onPageScroll);
@@ -76,39 +95,49 @@ function startNavigation(story: HTMLElement, scroll: Lenis, steps: Step[], snaps
     const target = currentStep + direction;
     if (target > lastStep) releaseScroll();
     else if (direction === 1) runStep(target, playForward);
-    else if (target >= 0) runStep(target, (from, to) => jump(from, to, -1));
+    else if (target >= 0) runStep(target, (from, to, isCancelled) => jumper.jump(from, to, -1, isCancelled));
   }
 
   async function navigateTo(target: HTMLElement) {
-    if (isAnimating || isReturning) return;
-
-    const stepIndex = steps.findIndex((step) => step.panel === target);
-    if (stepIndex === -1) {
+    if (!isStoryPanel(target)) {
       if (gestures.isEnabled()) releaseScroll(target);
       else scroll.scrollTo(target, { duration: PAGE_SCROLL_DURATION });
       return;
     }
 
+    const stepIndex = steps.findIndex((step) => step.panel === target);
+    if (stepIndex === -1) return;
+
+    const run = ++activeRun;
     if (!gestures.isEnabled()) await returnToStory(PAGE_SCROLL_DURATION, false);
-    if (stepIndex === currentStep) return;
-    const direction: Direction = stepIndex > currentStep ? 1 : -1;
-    await runStep(stepIndex, (from, to) => jump(from, to, direction));
+    if (run !== activeRun) return;
+    if (stepIndex === currentStep && !isAnimating) return;
+
+    jumper.stop();
+    const direction: Direction = stepIndex >= currentStep ? 1 : -1;
+    await runStep(stepIndex, (from, to, isCancelled) => jumper.jump(from, to, direction, isCancelled));
   }
 
-  async function runStep(target: number, animate: (from: Step, to: Step) => Promise<void>) {
+  async function runStep(target: number, animate: StepAnimation) {
+    const run = ++activeRun;
+    const isCancelled = () => run !== activeRun;
+
     isAnimating = true;
-    await animate(steps[currentStep], steps[target]);
+    await animate(steps[currentStep], steps[target], isCancelled);
+    if (isCancelled()) return;
+
     currentStep = target;
     isAnimating = false;
     gestures.reset();
   }
 
-  async function playForward(from: Step, to: Step) {
+  async function playForward(from: Step, to: Step, isCancelled: () => boolean) {
     hidePanel(from.panel, 1);
     hideStill(from.scene);
 
     if (from.scene === to.scene) await travel(from, to);
-    else await changeScene(from, to);
+    else await changeScene(from, to, isCancelled);
+    if (isCancelled()) return;
 
     showStill(to.scene, to.focus);
     snapshots.save(to);
@@ -123,7 +152,7 @@ function startNavigation(story: HTMLElement, scroll: Lenis, steps: Step[], snaps
     return scene.player.playForwardTo(to.time);
   }
 
-  async function changeScene(from: Step, to: Step) {
+  async function changeScene(from: Step, to: Step, isCancelled: () => boolean) {
     const out = from.scene;
     const end = endTime(out.forward);
     const type = to.scene.transition;
@@ -132,6 +161,7 @@ function startNavigation(story: HTMLElement, scroll: Lenis, steps: Step[], snaps
 
     const finishing = out.player.playForwardTo(end);
     await whenTimeReaches(out.forward, end - overlap * CONFIG.playbackRate);
+    if (isCancelled()) return;
     const transition = transitionScenes(out, to.scene, type);
     const arriving = travel(null, to);
     await transition;
@@ -142,19 +172,24 @@ function startNavigation(story: HTMLElement, scroll: Lenis, steps: Step[], snaps
     const hasContentBelow = document.documentElement.scrollHeight > window.innerHeight + 1;
     if (!hasContentBelow) return;
     gestures.disable();
-    scroll.start();
-    scroll.scrollTo(target, { duration: PAGE_SCROLL_DURATION });
+    scrollOutOfStory(scroll, target);
   }
 
   function onPageScroll() {
-    if (gestures.isEnabled() || isReturning) return;
+    if (gestures.isEnabled() || returning) return;
     if (scroll.scroll > story.offsetHeight / 2) hasLeftStory = true;
     const isNearStory = scroll.scroll < story.offsetHeight * CONFIG.returnThreshold;
     if (hasLeftStory && isNearStory && scroll.direction === -1) returnToStory(CONFIG.returnDuration, true);
   }
 
-  async function returnToStory(duration: number, keepCurrentGesture: boolean) {
-    isReturning = true;
+  function returnToStory(duration: number, keepCurrentGesture: boolean) {
+    returning ??= scrollBackToStory(duration, keepCurrentGesture).finally(() => {
+      returning = null;
+    });
+    return returning;
+  }
+
+  async function scrollBackToStory(duration: number, keepCurrentGesture: boolean) {
     scroll.stop();
     const position = { y: window.scrollY };
     await gsap.to(position, {
@@ -163,7 +198,6 @@ function startNavigation(story: HTMLElement, scroll: Lenis, steps: Step[], snaps
       ease: 'power2.out',
       onUpdate: () => window.scrollTo(0, position.y),
     });
-    isReturning = false;
     hasLeftStory = false;
     gestures.enable(keepCurrentGesture);
   }

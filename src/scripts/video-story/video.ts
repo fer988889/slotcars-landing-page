@@ -38,7 +38,7 @@ export function seekTo(video: HTMLVideoElement, time: number): Promise<void> {
 export function playUntil(video: HTMLVideoElement, time: number, rate: number): Promise<void> {
   return new Promise((resolve) => {
     const checkEachFrame = () => {
-      if (video.currentTime >= time || video.ended) {
+      if (video.currentTime >= time || video.ended || video.paused) {
         video.pause();
         resolve();
       } else {
