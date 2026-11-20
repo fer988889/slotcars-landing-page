@@ -1,6 +1,10 @@
 export const STORY_CONFIG = {
-  introDelay: 0.4,
+  introFade: 0.7,
+  introScale: 1.06,
+  introPanelDelay: 0.2,
   blurPx: 10,
+  stillGrayscale: 0.7,
+  stillContrast: 1.1,
   stillFadeIn: 0.5,
   stillFadeOut: 0.25,
   panelDuration: 0.5,

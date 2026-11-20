@@ -26,7 +26,7 @@ export function renderStill(video: HTMLVideoElement, canvas: HTMLCanvasElement, 
 function drawBlurred(ctx: CanvasRenderingContext2D, video: HTMLVideoElement, width: number, height: number, blur: number) {
   if (supportsCanvasFilter) {
     const margin = blur * 2; 
-    ctx.filter = `blur(${blur}px)`;
+    ctx.filter = `blur(${blur}px) grayscale(${CONFIG.stillGrayscale}) contrast(${CONFIG.stillContrast})`;
     ctx.drawImage(video, -margin, -margin, width + margin * 2, height + margin * 2);
     ctx.filter = 'none';
     return;

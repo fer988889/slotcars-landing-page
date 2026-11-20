@@ -20,40 +20,62 @@ export async function initVideoStory({ scroll }: StoryOptions) {
   const panels = gsap.utils.toArray<HTMLElement>('[data-panel]', story);
   if (scenes.length === 0 || panels.length === 0) return;
 
+  let pendingTarget: HTMLElement | null = null;
+  let navigateTo = (target: HTMLElement) => {
+    pendingTarget = target;
+  };
+  if (scroll) listenAnchorLinks((target) => navigateTo(target));
+  scroll?.stop();
+  const unlockTouch = scroll ? lockTouchScroll() : () => {};
   gsap.set(scenes.slice(1).map((scene) => scene.el), { autoAlpha: 0 });
   const allLoaded = Promise.all(scenes.map((scene) => loadVideo(scene.forward)));
-  if (!(await loadVideo(scenes[0].forward))) return;
+  if (!(await loadVideo(scenes[0].forward))) {
+    unlockTouch();
+    scroll?.start();
+    return;
+  }
   await seekTo(scenes[0].forward, scenes[0].start);
+  await framePresented(scenes[0].forward);
 
   const firstFocus = readFocus(panels[0]);
   if (!scroll) {
     showStill(scenes[0], firstFocus).progress(1);
+    scenes[0].forward.style.visibility = '';
     gsap.set(panels[0], { autoAlpha: 1 });
     return;
   }
 
-  let pendingTarget: HTMLElement | null = null;
-  let navigateTo = (target: HTMLElement) => {
-    pendingTarget = target;
-    if (!isStoryPanel(target)) scrollOutOfStory(scroll, target);
-  };
-  listenAnchorLinks((target) => navigateTo(target));
-
-  scroll.stop();
-  playIntro(scenes[0], panels[0], firstFocus);
-
-  const loaded = await allLoaded;
+  const [loaded] = await Promise.all([allLoaded, playIntro(scenes[0], panels[0], firstFocus)]);
   const steps = buildSteps(scenes.filter((_, i) => loaded[i]), panels);
   const snapshots = createSnapshots(steps);
   snapshots.save(steps[0]);
   const jumper = createJumper(steps, jumpLayer, snapshots);
   navigateTo = startNavigation(story, scroll, steps, snapshots, jumper);
+  unlockTouch();
   if (pendingTarget) navigateTo(pendingTarget);
 }
 
+function lockTouchScroll() {
+  const block = (event: TouchEvent) => event.preventDefault();
+  window.addEventListener('touchmove', block, { passive: false });
+  return () => window.removeEventListener('touchmove', block);
+}
+
+function framePresented(video: HTMLVideoElement) {
+  return new Promise<void>((resolve) => {
+    const done = () => resolve();
+    setTimeout(done, 250);
+    if ('requestVideoFrameCallback' in video) video.requestVideoFrameCallback(done);
+  });
+}
+
 async function playIntro(scene: Scene, panel: HTMLElement, focus: Focus | null) {
-  await showStill(scene, focus, CONFIG.introDelay);
-  await showPanel(panel, 1);
+  gsap.set(scene.el, { autoAlpha: 0, scale: CONFIG.introScale });
+  showStill(scene, focus).progress(1);
+  scene.forward.style.visibility = '';
+  const fade = gsap.to(scene.el, { autoAlpha: 1, scale: 1, duration: CONFIG.introFade, ease: 'power2.out' });
+  await gsap.delayedCall(CONFIG.introPanelDelay, () => {});
+  await Promise.all([showPanel(panel, 1), fade]);
 }
 
 function isStoryPanel(target: HTMLElement) {
@@ -63,6 +85,10 @@ function isStoryPanel(target: HTMLElement) {
 function scrollOutOfStory(scroll: Lenis, target: HTMLElement | number) {
   scroll.start();
   scroll.scrollTo(target, { duration: PAGE_SCROLL_DURATION });
+}
+
+function announceStep(step: Step) {
+  document.dispatchEvent(new CustomEvent('story:step', { detail: { id: step.panel.id } }));
 }
 
 function listenAnchorLinks(onLink: (target: HTMLElement) => void) {
@@ -127,6 +153,7 @@ function startNavigation(story: HTMLElement, scroll: Lenis, steps: Step[], snaps
     if (isCancelled()) return;
 
     currentStep = target;
+    announceStep(steps[target]);
     isAnimating = false;
     gestures.reset();
   }

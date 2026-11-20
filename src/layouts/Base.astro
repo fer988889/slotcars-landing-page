@@ -11,6 +11,22 @@ const { title, description } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <script is:inline>
+      history.scrollRestoration = 'manual';
+      document.documentElement.classList.add('is-loading');
+      document.addEventListener('click', function (event) {
+        if (!document.documentElement.classList.contains('is-loading')) return;
+        var link = event.target.closest && event.target.closest('a[href^="#"]');
+        if (!link) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        window.__pendingLink = link;
+      }, true);
+    </script>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap" />
   </head>
   <body>
     <slot />
@@ -21,6 +37,7 @@ const { title, description } = Astro.props;
   * { box-sizing: border-box; margin: 0; }
   html.lenis, html.lenis body { height: auto; }
   html.lenis-stopped { overflow: hidden; }
+  html.is-loading, html.is-loading body { overflow: hidden; touch-action: none; }
   html { scrollbar-width: none; }
   html::-webkit-scrollbar { display: none; }
   body { background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; overflow-x: hidden; }

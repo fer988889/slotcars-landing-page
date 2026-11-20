@@ -1,0 +1,90 @@
+<div class="scroll-hint" aria-hidden="true">
+  <div class="mouse">
+    <div class="wheel"></div>
+  </div>
+  <div class="swipe">
+    <div class="arrow"></div>
+    <div class="arrow"></div>
+    <span>deslizá</span>
+  </div>
+</div>
+
+<style>
+  .scroll-hint {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 4.5rem;
+    pointer-events: none;
+  }
+
+  .mouse {
+    width: 22px;
+    height: 36px;
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid #fff;
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / .15),
+      0 0 0 2px rgb(255 255 255 / .1),
+      0 0 0 4px rgb(255 255 255 / .07),
+      0 0 0 6px rgb(255 255 255 / .05),
+      0 0 0 8px rgb(255 255 255 / .03);
+    position: relative;
+  }
+
+  .wheel {
+    width: 4px;
+    height: 7px;
+    border-radius: 7px;
+    background-color: #fff;
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / .2),
+      0 0 0 3px rgb(255 255 255 / .08);
+    animation: scroll-wheel 2s linear infinite;
+    transform: translateY(40%);
+  }
+
+  .mouse::after {
+    content: 'scroll';
+    position: absolute;
+    top: 115%;
+    color: #fff;
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  .swipe { display: none; flex-direction: column; align-items: center; color: #fff; }
+  .arrow {
+    width: 11px;
+    height: 11px;
+    margin-bottom: -2px;
+    border-top: 2px solid #fff;
+    border-left: 2px solid #fff;
+    border-radius: 2px 0 0 0;
+    animation: swipe-arrow 1.6s ease-in-out infinite;
+  }
+  .arrow + .arrow { animation-delay: .2s; }
+  .swipe span { margin-top: 14px; font-size: .7rem; text-transform: uppercase; letter-spacing: 1.5px; }
+
+  @media (hover: none) and (pointer: coarse) {
+    .mouse { display: none; }
+    .swipe { display: flex; }
+  }
+
+  @keyframes swipe-arrow {
+    0%, 100% { transform: translateY(4px) rotate(45deg); border-color: rgb(255 255 255 / .3); }
+    50% { transform: translateY(-4px) rotate(45deg); border-color: #fff; }
+  }
+
+  @keyframes scroll-wheel {
+    0% { transform: translateY(40%); }
+    50% { transform: translateY(90%); }
+  }
+</style>

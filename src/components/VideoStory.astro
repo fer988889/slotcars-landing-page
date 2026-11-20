@@ -1,5 +1,6 @@
 ---
 import type { VideoStoryProps } from '../types/video-story';
+import ScrollHint from './ScrollHint.astro';
 
 type Props = VideoStoryProps;
 
@@ -19,7 +20,7 @@ const { scenes } = Astro.props;
       >
         <div class="scene-zoom" data-scene-zoom>
           <div class="scene-frame">
-            <video data-video="forward" src={`/videos/${scene.video}.mp4${i === 0 ? `#t=${scene.start ?? 0.001}` : ''}`} muted playsinline preload="auto"></video>
+            <video data-video="forward" style={i === 0 ? 'visibility:hidden' : undefined} src={`/videos/${scene.video}.mp4${i === 0 ? `#t=${scene.start ?? 0.001}` : ''}`} muted playsinline preload="auto"></video>
             <canvas data-still></canvas>
           </div>
         </div>
@@ -33,12 +34,14 @@ const { scenes } = Astro.props;
   </div>
 
   <slot />
+  <ScrollHint />
 </section>
 
 <style>
   .story { position: relative; height: 100svh; overflow: hidden; }
   .story-media { position: absolute; inset: 0; z-index: 0; background: #000; }
   .scene, .scene-zoom { position: absolute; inset: 0; }
+  .scene + .scene { opacity: 0; visibility: hidden; }
   .scene-frame { position: absolute; left: 50%; top: 50%; width: max(100%, calc(100svh * 16 / 9)); aspect-ratio: 16 / 9; transform: translate(-50%, -50%) scale(1.03); }
   .scene-frame video, .scene-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
   .jump-layer { z-index: 3; pointer-events: none; opacity: 0; visibility: hidden; }
