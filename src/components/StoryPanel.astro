@@ -3,9 +3,10 @@ import type { StoryPanelProps } from '../types/video-story';
 
 type Props = StoryPanelProps;
 
-const { scene, time, focus, align = 'center' } = Astro.props;
+const { id, scene, time, focus, align = 'center' } = Astro.props;
 ---
 <div
+  id={id}
   class:list={['panel', `panel--${align}`]}
   data-panel
   data-scene={scene}

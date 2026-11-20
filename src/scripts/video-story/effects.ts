@@ -1,5 +1,5 @@
 import gsap from 'gsap';
-import type { Direction, Focus, Scene, SceneAlign, Transition } from '../../types/video-story';
+import type { Direction, Focus, Scene, Transition } from '../../types/video-story';
 import { STORY_CONFIG as CONFIG } from './config';
 import { renderStill } from './still';
 
@@ -15,7 +15,6 @@ export function hidePanel(panel: HTMLElement, direction: Direction) {
   return gsap.to(panel, { autoAlpha: 0, y: -40 * direction, duration: CONFIG.panelDuration });
 }
 
-/** Foto desenfocada del frame actual, encima del video. */
 export function showStill(scene: Scene, focus: Focus | null, delay = 0) {
   renderStill(scene.forward, scene.still, focus);
   return gsap.to(scene.still, { autoAlpha: 1, duration: CONFIG.stillFadeIn, delay });
@@ -47,14 +46,17 @@ export function zoomOut(scene: Scene, travelSeconds: number) {
   });
 }
 
+export function restZoom(focus: Focus | null) {
+  return focus ? { scale: CONFIG.focusZoom, xPercent: CONFIG.focusShiftX } : { scale: 1, xPercent: 0 };
+}
 
-export function transitionScenes(from: Scene, to: Scene, type: Transition, direction: Direction) {
+export function transitionScenes(from: Scene, to: Scene, type: Transition) {
   gsap.set(from.el, { zIndex: 1 });
   gsap.set(to.el, { zIndex: 2 });
-  const hideFrom = () => gsap.set(from.el, { autoAlpha: 0, scale: 1 });
+  const hideFrom = () => gsap.set(from.el, { autoAlpha: 0, scale: 1, xPercent: 0, yPercent: 0 });
 
   if (type === 'cut') {
-    const { x, y, scale } = direction === 1 ? to.align : invertAlign(from.align);
+    const { x, y, scale } = to.align;
     return gsap.fromTo(
       to.el,
       { autoAlpha: 1, xPercent: x, yPercent: y, scale },
@@ -73,8 +75,4 @@ export function transitionScenes(from: Scene, to: Scene, type: Transition, direc
   return gsap
     .timeline({ onComplete: hideFrom })
     .fromTo(to.el, { autoAlpha: 0 }, { autoAlpha: 1, duration: CONFIG.fadeTransition, ease: 'none' });
-}
-
-function invertAlign({ x, y, scale }: Required<SceneAlign>): Required<SceneAlign> {
-  return { x: -x, y: -y, scale: 1 / scale };
 }

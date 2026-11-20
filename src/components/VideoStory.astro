@@ -15,16 +15,21 @@ const { scenes } = Astro.props;
         data-align-x={scene.align?.x}
         data-align-y={scene.align?.y}
         data-align-scale={scene.align?.scale}
+        data-start={scene.start}
       >
         <div class="scene-zoom" data-scene-zoom>
           <div class="scene-frame">
-            <video data-video="forward" src={`/videos/${scene.video}.mp4${i === 0 ? '#t=0.001' : ''}`} muted playsinline preload="auto"></video>
-            <video data-video="reverse" src={`/videos/${scene.video}-reverse.mp4`} muted playsinline preload="auto"></video>
+            <video data-video="forward" src={`/videos/${scene.video}.mp4${i === 0 ? `#t=${scene.start ?? 0.001}` : ''}`} muted playsinline preload="auto"></video>
             <canvas data-still></canvas>
           </div>
         </div>
       </div>
     ))}
+    <div class="scene jump-layer" data-jump>
+      <div class="scene-zoom" data-jump-zoom>
+        <div class="scene-frame"><canvas data-jump-still></canvas></div>
+      </div>
+    </div>
   </div>
 
   <slot />
@@ -34,8 +39,8 @@ const { scenes } = Astro.props;
   .story { position: relative; height: 100svh; overflow: hidden; }
   .story-media { position: absolute; inset: 0; z-index: 0; background: #000; }
   .scene, .scene-zoom { position: absolute; inset: 0; }
-  .scene-frame { position: absolute; left: 50%; top: 50%; width: max(100%, calc(100svh * 16 / 9)); aspect-ratio: 16 / 9; transform: translate(-50%, -50%); }
+  .scene-frame { position: absolute; left: 50%; top: 50%; width: max(100%, calc(100svh * 16 / 9)); aspect-ratio: 16 / 9; transform: translate(-50%, -50%) scale(1.03); }
   .scene-frame video, .scene-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .scene-frame [data-video="reverse"] { visibility: hidden; }
+  .jump-layer { z-index: 3; pointer-events: none; opacity: 0; visibility: hidden; }
   .scene-frame canvas { opacity: 0; visibility: hidden; }
 </style>

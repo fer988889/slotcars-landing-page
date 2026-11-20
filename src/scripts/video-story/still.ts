@@ -63,6 +63,14 @@ function drawSharpEllipse(ctx: CanvasRenderingContext2D, video: HTMLVideoElement
   ctx.drawImage(layer, 0, 0);
 }
 
+export function copyCanvas(source: HTMLCanvasElement, target: HTMLCanvasElement) {
+  if (target.width !== source.width || target.height !== source.height) {
+    target.width = source.width;
+    target.height = source.height;
+  }
+  target.getContext('2d', { alpha: false })?.drawImage(source, 0, 0);
+}
+
 function getHelper(width: number, height: number) {
   helper ??= document.createElement('canvas');
   helper.width = width;

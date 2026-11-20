@@ -6,7 +6,6 @@ import { getStopTimes } from './video';
 export function findScenes(media: HTMLElement): Scene[] {
   return gsap.utils.toArray<HTMLElement>('[data-scene]', media).flatMap((el) => {
     const forward = el.querySelector<HTMLVideoElement>('[data-video="forward"]');
-    const reverse = el.querySelector<HTMLVideoElement>('[data-video="reverse"]');
     const zoom = el.querySelector<HTMLElement>('[data-scene-zoom]');
     const still = el.querySelector<HTMLCanvasElement>('[data-still]');
     if (!forward || !zoom || !still) return [];
@@ -16,8 +15,9 @@ export function findScenes(media: HTMLElement): Scene[] {
       still,
       name: el.dataset.scene ?? '',
       forward,
-      player: createPlayer(forward, reverse),
+      player: createPlayer(forward),
       transition: readTransition(el.dataset.transition),
+      start: Number(el.dataset.start ?? 0),
       align: {
         x: Number(el.dataset.alignX ?? 0),
         y: Number(el.dataset.alignY ?? 0),
@@ -40,7 +40,7 @@ export function readFocus(panel: HTMLElement): Focus | null {
 export function buildSteps(scenes: Scene[], panels: HTMLElement[]): Step[] {
   return scenes.flatMap((scene, index) => {
     const scenePanels = panels.filter((panel) => panel.dataset.scene === scene.name);
-    const times = getStopTimes(scene.forward, scenePanels.length, index === 0);
+    const times = getStopTimes(scene.forward, scenePanels.length, index === 0 ? scene.start : null);
     return scenePanels.map((panel, i) => ({
       scene,
       panel,

@@ -11,19 +11,26 @@ import Testimonials from '../components/sections/Testimonials.astro';
 import type { StoryScene } from '../types/video-story';
 
 const scenes: StoryScene[] = [
-  { name: 'intro', video: 'hero' },
+  { name: 'intro', video: 'hero', start: 1.3 },
   { name: 'servicios', video: 'slot-cars-video-2' },
   { name: 'testimonios', video: 'slot-cars-video-3', transition: 'cut', align: { y: 2.2 } },
 ];
+
+const sections = [
+  { id: 'inicio', label: 'Inicio' },
+  { id: 'como-funciona', label: 'Cómo funciona' },
+  { id: 'incluido', label: 'Qué incluye' },
+  { id: 'testimonios', label: 'Testimonios' },
+];
 ---
 <Base title="Slotcars | Pistas de autos a control remoto para tu evento" description="Llevamos la pista, los obstáculos y los autos a control remoto a tu evento.">
-  <Nav />
+  <Nav sections={sections} />
 
   <VideoStory scenes={scenes}>
-    <Hero scene="intro" />
-    <HowItWorks scene="intro" />
-    <Included scene="servicios" time={2.37} focus={{ x: 50, y: 56 }} align="right" />
-    <Testimonials scene="testimonios" />
+    <Hero id="inicio" scene="intro" />
+    <HowItWorks id="como-funciona" scene="intro" />
+    <Included id="incluido" scene="servicios" time={2.37} focus={{ x: 50, y: 56 }} align="right" />
+    <Testimonials id="testimonios" scene="testimonios" />
   </VideoStory>
 
   <Contact />

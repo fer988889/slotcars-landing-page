@@ -14,6 +14,7 @@ export interface StoryScene {
   video: string;
   transition?: Transition;
   align?: SceneAlign;
+  start?: number;
 }
 
 export interface VideoStoryProps {
@@ -21,6 +22,7 @@ export interface VideoStoryProps {
 }
 
 export interface StoryPanelProps {
+  id: string;
   scene: string;
   time?: number;
   focus?: { x: number; y: number };
@@ -41,7 +43,6 @@ export interface Focus {
 
 export interface Player {
   playForwardTo(time: number): Promise<void>;
-  playBackwardTo(time: number): Promise<void>;
 }
 
 export interface Scene {
@@ -53,6 +54,7 @@ export interface Scene {
   player: Player;
   transition: Transition;
   align: Required<SceneAlign>;
+  start: number;
 }
 
 export interface Step {
